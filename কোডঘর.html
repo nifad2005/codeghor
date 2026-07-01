@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>কোডঘর · মিনিমাল</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e17;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.7 !important;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a3346;
+            border-radius: 10px;
+        }
+
+        .theme-default {
+            background-color: #0b0f1a !important;
+            color: #cdd6e9 !important;
+        }
+        .theme-dracula {
+            background-color: #282a36 !important;
+            color: #f8f8f2 !important;
+        }
+        .theme-onedark {
+            background-color: #1e1e24 !important;
+            color: #abb2bf !important;
+        }
+
+        .editor-wrap {
+            background: #0b0f1a;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: border-color 0.2s;
+        }
+        .editor-wrap:focus-within {
+            border-color: rgba(99, 102, 241, 0.35);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.06);
+        }
+
+        #code-input {
+            line-height: 1.7 !important;
+            caret-color: #818cf8;
+            tab-size: 4;
+            letter-spacing: 0.01em;
+        }
+        #code-input::selection {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        #line-numbers {
+            line-height: 1.7 !important;
+            user-select: none;
+            pointer-events: none;
+            font-feature-settings: "tnum";
+        }
+        #line-numbers::-webkit-scrollbar {
+            display: none;
+        }
+
+        .action-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7a99;
+            transition: all 0.15s ease;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .action-icon:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #e2e8f0;
+        }
+        .action-icon:active {
+            transform: scale(0.92);
+        }
+        .action-icon.active {
+            color: #818cf8;
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .primary-btn {
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .primary-btn:active {
+            transform: scale(0.96);
+        }
+        .primary-btn-share {
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.15);
+        }
+        .primary-btn-share:hover {
+            background: rgba(99, 102, 241, 0.25);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+        .primary-btn-download {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        }
+        .primary-btn-download:hover {
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .toggle-switch {
+            width: 34px;
+            height: 18px;
+            background: #1e293b;
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.25s ease;
+            flex-shrink: 0;
+        }
+        .toggle-switch.active {
+            background: #818cf8;
+        }
+        .toggle-switch .thumb {
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        .toggle-switch.active .thumb {
+            left: 18px;
+        }
+
+        #settings-modal {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .modal-card {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 20px;
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.9);
+            max-height: 95vh;
+            overflow: hidden;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 3px;
+            border-radius: 10px;
+            background: #1e293b;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #818cf8;
+            cursor: pointer;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #818cf8;
+            cursor: pointer;
+            border: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.25s ease forwards;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 8px;
+            }
+            .primary-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .primary-btn span {
+                display: none;
+            }
+            .action-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+        }
+
+        #preview-frame {
+            background: white;
+            border-radius: 14px;
+        }
+        #preview-container.hidden {
+            display: none;
+        }
+
+        .file-drop-label {
+            transition: all 0.2s ease;
+        }
+        .file-drop-label:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            background: rgba(99, 102, 241, 0.04);
+        }
+
+        .pulse-dot {
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(0.85);
+            }
+        }
+
+        /* --- settings tabs (mobile friendly) --- */
+        .settings-tabs-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            overflow-x: auto;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .settings-tabs-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .settings-tab-btn {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #94a3b8;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            border-radius: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .settings-tab-btn:hover {
+            color: #e2e8f0;
+        }
+        .settings-tab-btn.active {
+            color: #a5b4fc;
+            border-bottom-color: #818cf8;
+        }
+        .settings-tab-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .settings-content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0 8px 0;
+        }
+        .settings-content-scroll>div {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .settings-content-scroll>div.active {
+            display: flex;
+        }
+
+        /* --- ফিডব্যাক ইফ্রেম – মোবাইলে বড় ও স্বচ্ছন্দ --- */
+        .feedback-iframe-wrap {
+            background: #0b0f1a;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            height: 480px;
+            width: 100%;
+        }
+        .feedback-iframe-wrap iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        @media (max-width: 640px) {
+            .modal-card {
+                max-height: 98vh;
+                border-radius: 16px;
+            }
+            .settings-tab-btn {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+            .settings-tab-btn svg {
+                width: 14px;
+                height: 14px;
+            }
+            .settings-content-scroll {
+                padding: 12px 0 4px 0;
+            }
+            .feedback-iframe-wrap {
+                height: 460px;
+                /* মোবাইলে বড় */;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .feedback-iframe-wrap {
+                height: 400px;
+            }
+        }
+
+        /* ফাইলনেম ইনপুট – ফোকাসে পুরো টেক্সট সিলেক্ট */
+        #filename-input {
+            cursor: text;
+        }
+        #filename-input:focus {
+            outline: none;
+        }
+
+        /* শেয়ার মডাল পুরোপুরি সরানো হয়েছে – এখন আর নেই */
+    </style>
+</head>
+<body>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!--  M A I N   W R A P P E R                -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="w-full max-w-5xl">
+
+        <!-- ─── header : filename + share/download ─── -->
+        <div class="flex items-center gap-2.5 mb-3.5 px-1 flex-wrap">
+            <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+                <div class="w-7 h-7 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-indigo-300" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                </div>
+                <!-- ফোকাসে পুরো টেক্সট সিলেক্ট – 'Index' পুরোটা একবারেই রিপ্লেস -->
+                <input id="filename-input" type="text" value="Index" onfocus="this.select()" oninput="capitalizeFirstLetter(this)"
+                class="flex-1 min-w-[60px] bg-transparent border-0 text-sm font-medium text-slate-200 placeholder:text-slate-500 focus:outline-none px-1 py-1.5" />
+                <select id="extension-select" onchange="debouncedUpdatePreview()"
+                class="bg-transparent border-0 text-sm text-slate-400 focus:outline-none cursor-pointer pr-5 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjYiIHZpZXdCb3g9IjAgMCA4IDYiPjxwYXRoIGQ9Ik0xIDFsMyAzIDMtMyIgc3Ryb2tlPSIjNjQ3NDhiIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+')] bg-[length:10px] bg-no-repeat bg-right">
+                <option value="html">.html</option>
+                <option value="css">.css</option>
+                <option value="js">.js</option>
+                <option value="py">.py</option>
+                <option value="json">.json</option>
+                <option value="md">.md</option>
+                <option value="txt">.txt</option>
+            </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- শেয়ার – সরাসরি, কোনো মডাল ছাড়া -->
+            <button onclick="shareFileDirectly()" class="primary-btn primary-btn-share" title="শেয়ার">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                <span>শেয়ার</span>
+            </button>
+            <button onclick="saveAsFile()" class="primary-btn primary-btn-download" title="ডাউনলোড">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>ডাউনলোড</span>
+            </button>
+            <button onclick="openSettingsModal()" class="p-1.5 rounded-xl hover:bg-white/5 transition relative group" title="সেটিংস">
+                <svg class="w-5 h-5 text-slate-500 group-hover:text-slate-300 transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span id="profile-alert-dot" class="absolute -top-0.5 -right-0.5 w-2 h-2 hidden">
+                    <span class="absolute inset-0 rounded-full bg-red-500 pulse-dot"></span>
+                    <span class="absolute inset-0 rounded-full bg-red-500/60 animate-ping"></span>
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ─── editor grid (with preview) ─── -->
+    <div id="workspace-grid" class="grid grid-cols-1 gap-3.5 transition-all duration-300 ease-out">
+        <div class="editor-wrap overflow-hidden h-[440px] md:h-[500px] flex flex-col relative">
+            <div class="flex flex-1 overflow-hidden">
+                <div id="line-numbers" class="w-10 py-4 font-mono text-xs text-slate-500 bg-[#080c18] border-r border-white/5 text-right pr-2.5 select-none overflow-y-hidden flex-shrink-0">
+                    <div>1</div>
+                </div>
+                <textarea id="code-input"
+                class="flex-1 h-full py-4 px-4 bg-transparent text-slate-200 theme-default mono text-sm focus:outline-none resize-none whitespace-pre break-all overflow-y-auto"
+                placeholder="//  এখানে কোড পেস্ট করো অথবা ফাইল ড্র্যাগ করো…"
+                oninput="onCodeInput()" onscroll="syncScroll()"></textarea>
+            </div>
+
+            <div class="flex-shrink-0 h-10 px-4 border-t border-white/5 bg-[#080c18]/90 flex items-center justify-between text-[10px] md:text-[11px] text-slate-500 select-none">
+                <div class="flex items-center gap-3">
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400/70 animate-pulse"></span>
+                        <span class="text-emerald-400/70 font-medium">অটো-সেভ</span>
+                    </span>
+                    <span id="char-line-count" class="font-mono">লাইন ১ · ০ অক্ষর</span>
+                </div>
+
+                <div class="flex items-center gap-0.5">
+                    <button onclick="copyCode()" class="action-icon" title="কপি">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                    </button>
+                    <button onclick="formatCode()" class="action-icon" title="ফরম্যাট">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10" /></svg>
+                    </button>
+                    <button onclick="clearCode()" class="action-icon" title="মুছে ফেলো">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                    <span class="w-px h-5 bg-white/5 mx-1"></span>
+                    <button onclick="togglePreview()" id="preview-toggle-btn" class="action-icon" title="প্রিভিউ টগল">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="preview-container" class="hidden rounded-2xl border border-white/5 overflow-hidden h-[440px] md:h-[500px] bg-white">
+            <iframe id="preview-frame" sandbox="allow-scripts" class="w-full h-full bg-white"></iframe>
+        </div>
+    </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!--  S E T T I N G S   M O D A L            -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="settings-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-3 z-50 transition-opacity">
+    <div class="modal-card w-full max-w-2xl flex flex-col fade-in">
+
+        <div class="flex items-center justify-between px-4 py-3 border-b border-white/5 flex-shrink-0">
+            <span class="text-sm font-semibold text-white">⚙️ কন্ট্রোল সেন্টার</span>
+            <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-200 transition text-lg">✕</button>
+        </div>
+
+        <!-- ট্যাব (স্ক্রলযোগ্য) -->
+        <div class="settings-tabs-wrapper px-3">
+            <button onclick="switchSettingTab('appearance')" id="tab-appearance" class="settings-tab-btn active">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+                চেহারা
+            </button>
+            <button onclick="switchSettingTab('profile')" id="tab-profile" class="settings-tab-btn">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                প্রোফাইল
+            </button>
+            <button onclick="switchSettingTab('feedback')" id="tab-feedback" class="settings-tab-btn">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                মতামত
+            </button>
+        </div>
+
+        <!-- কন্টেন্ট -->
+        <div class="settings-content-scroll px-4">
+
+            <!-- appearance -->
+            <div id="content-appearance" class="active">
+                <div>
+                    <label class="text-[11px] text-slate-400 font-medium block mb-1.5">এডিটর থিম</label>
+                    <select id="theme-select" onchange="applyTheme()" class="w-full bg-[#0b0f1a] text-sm px-3 py-2.5 rounded-xl border border-white/8 text-slate-200 outline-none focus:border-indigo-500/50">
+                        <option value="default">ডিফল্ট ডার্ক</option>
+                        <option value="dracula">Dracula</option>
+                        <option value="onedark">One Dark</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[11px] text-slate-400 font-medium">ফন্ট সাইজ</label>
+                        <span id="font-size-val" class="text-xs text-indigo-400 font-mono">14px</span>
+                    </div>
+                    <input id="font-size-input" type="range" min="12" max="20" value="14" oninput="applyFontSize()" class="w-full" />
+                </div>
+                <div class="flex items-center justify-between bg-[#0b0f1a] p-3 rounded-xl border border-white/5">
+                    <label class="text-[11px] text-slate-400 font-medium">লাইন নম্বর দেখাও</label>
+                    <div id="line-num-toggle" class="toggle-switch active" onclick="toggleLineNumbers()">
+                        <div class="thumb"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- profile -->
+            <div id="content-profile">
+                <div class="flex items-center gap-3.5 bg-[#0b0f1a] p-3 rounded-xl border border-white/5">
+                    <img id="profile-display-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop" class="h-12 w-12 rounded-full object-cover border-2 border-white/10 flex-shrink-0" />
+                    <div class="min-w-0">
+                        <h4 id="profile-display-name" class="text-sm font-semibold text-slate-200 truncate">ইউজার</h4>
+                        <p id="profile-display-phone" class="text-[11px] text-slate-500 truncate">নম্বর দিন</p>
+                    </div>
+                </div>
+
+                <input id="profile-name-input" type="text" placeholder="আপনার নাম"
+                class="w-full bg-[#0b0f1a] border border-white/8 rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50" />
+                <input id="profile-phone-input" type="text" placeholder="মোবাইল নম্বর" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                class="w-full bg-[#0b0f1a] border border-white/8 rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50" />
+
+                <label class="file-drop-label w-full flex items-center justify-center px-4 py-2.5 bg-[#0b0f1a] border border-dashed border-white/10 rounded-xl text-xs text-slate-400 cursor-pointer">
+                    <span id="upload-status-text">📁  ছবি আপলোড</span>
+                    <input id="profile-file-input" type="file" accept="image/*" onchange="handleImageUpload(event)" class="hidden" />
+                </label>
+
+                <button onclick="saveProfileData()" class="w-full bg-emerald-600/70 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-medium transition mt-1">
+                    💾  প্রোফাইল আপডেট
+                </button>
+            </div>
+
+            <!-- feedback (iframe) – মোবাইলে বড় ও স্বচ্ছন্দ -->
+            <div id="content-feedback">
+                <div class="feedback-iframe-wrap">
+                    <iframe src="https://forms.gle/RyvPHsasKGiaoTeWA" allowfullscreen loading="lazy"></iframe>
+                </div>
+                <p class="text-[10px] text-slate-500 text-center mt-2">
+                    ফর্মটি লোড না হলে 
+                    <a href="https://forms.gle/RyvPHsasKGiaoTeWA" target="_blank" class="text-indigo-400 hover:underline">এখানে ক্লিক করুন</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between px-4 py-3 border-t border-white/5 bg-[#080c18]/50 flex-shrink-0">
+            <button onclick="resetSettings()" class="text-[10px] text-slate-500 hover:text-slate-300 transition underline-offset-2 hover:underline">রিসেট সব</button>
+            <span class="text-[9px] text-slate-600 font-mono">v2.8</span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!--  S C R I P T                            -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<script>
+    // ─── refs ───
+    const extSelect = document.getElementById('extension-select');
+    const codeInput = document.getElementById('code-input');
+    const filenameInput = document.getElementById('filename-input');
+    const previewFrame = document.getElementById('preview-frame');
+    const charLineCount = document.getElementById('char-line-count');
+    const settingsModal = document.getElementById('settings-modal');
+    const themeSelect = document.getElementById('theme-select');
+    const fontSizeInput = document.getElementById('font-size-input');
+    const fontSizeVal = document.getElementById('font-size-val');
+    const lineNumbers = document.getElementById('line-numbers');
+    const lineNumToggle = document.getElementById('line-num-toggle');
+    const workspaceGrid = document.getElementById('workspace-grid');
+    const previewContainer = document.getElementById('preview-container');
+    const previewToggleBtn = document.getElementById('preview-toggle-btn');
+
+    let isPreviewOpen = false;
+    let debounceTimer;
+    let compressedImageBase64 = "";
+
+    // ─── init ───
+    window.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('last_used_extension')) extSelect.value = localStorage.getItem('last_used_extension');
+        if (localStorage.getItem('autosaved_code')) codeInput.value = localStorage.getItem('autosaved_code');
+
+        themeSelect.value = localStorage.getItem('editor_theme') || 'default';
+        applyTheme();
+
+        fontSizeInput.value = localStorage.getItem('editor_font_size') || '14';
+        applyFontSize();
+
+        if (localStorage.getItem('line_numbers_visible') === 'false') {
+            lineNumToggle.classList.remove('active');
+            lineNumbers.style.display = 'none';
+        }
+
+        loadProfileData();
+        updateCount();
+        updatePreview();
+        // NO auto-focus – fixes unwanted keyboard popup
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (!settingsModal.classList.contains('hidden')) closeSettingsModal();
+        }
+    });
+
+    // ─── image upload ───
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        document.getElementById('upload-status-text').innerText = "⏳ …";
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX = 100;
+                let w = img.width,
+                    h = img.height;
+                if (w > h) { if (w > MAX) { h *= MAX / w;
+                        w = MAX; } } else { if (h > MAX) { w *= MAX / h;
+                        h = MAX; } }
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                compressedImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                document.getElementById('profile-display-img').src = compressedImageBase64;
+                document.getElementById('upload-status-text').innerText = "✅  " + file.name.substring(0, 10) + (file.name
+                    .length > 10 ? '…' : '');
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ─── clear ───
+    function clearCode() {
+        if (codeInput.value.trim().length === 0) return;
+        if (confirm('সম্পূর্ণ কোড মুছে ফেলবেন?')) {
+            codeInput.value = '';
+            localStorage.removeItem('autosaved_code');
+            updateCount();
+            updatePreview();
+            codeInput.focus();
+        }
+    }
+
+    // ─── profile ───
+    function loadProfileData() {
+        const name = localStorage.getItem('prof_name') || '';
+        const phone = localStorage.getItem('prof_phone') || '';
+        const img = localStorage.getItem('prof_img') || '';
+
+        document.getElementById('profile-name-input').value = name;
+        document.getElementById('profile-phone-input').value = phone;
+        if (img) compressedImageBase64 = img;
+
+        document.getElementById('profile-display-name').innerText = name || 'অসম্পূর্ণ';
+        document.getElementById('profile-display-phone').innerText = phone || 'নম্বর নেই';
+        if (img) document.getElementById('profile-display-img').src = img;
+
+        const isComplete = name.trim() !== '' && phone.trim().length >= 11 && img.trim() !== '';
+        const dot = document.getElementById('profile-alert-dot');
+
+        if (isComplete) {
+            dot.classList.add('hidden');
+        } else {
+            dot.classList.remove('hidden');
+        }
+    }
+
+    function saveProfileData() {
+        const name = document.getElementById('profile-name-input').value.trim();
+        const phone = document.getElementById('profile-phone-input').value.trim();
+        if (phone.length > 0 && phone.length < 11) { alert('১১ ডিজিটের মোবাইল নম্বর দিন।'); return; }
+        localStorage.setItem('prof_name', name);
+        localStorage.setItem('prof_phone', phone);
+        localStorage.setItem('prof_img', compressedImageBase64);
+        loadProfileData();
+        alert('✅ প্রোফাইল আপডেট হয়েছে');
+    }
+
+    // ─── settings modal ───
+    function openSettingsModal() {
+        settingsModal.classList.remove('hidden');
+        settingsModal.classList.add('flex');
+        switchSettingTab('appearance');
+    }
+
+    function closeSettingsModal() {
+        settingsModal.classList.remove('flex');
+        settingsModal.classList.add('hidden');
+        codeInput.focus();
+    }
+
+    // ─── settings tabs ───
+    function switchSettingTab(tabId) {
+        document.querySelectorAll('.settings-tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+
+        document.querySelectorAll('.settings-content-scroll > div').forEach(el => el.classList.remove('active'));
+        document.getElementById(`content-${tabId}`).classList.add('active');
+    }
+
+    // ─── শেয়ার – সরাসরি, কোনো মডাল ছাড়া ───
+    async function shareFileDirectly() {
+        const content = codeInput.value;
+        if (!content) { alert('কোড খালি, শেয়ার করা যাবে না।'); return; }
+
+        let name = filenameInput.value.trim().replace(/[\\/:*?"<>|]/g, "").replace(/\.+$/, "") || 'Index';
+        const ext = extSelect.value;
+        if (!name.endsWith('.' + ext)) name = name.split('.')[0] + '.' + ext;
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const file = new File([blob], name, { type: blob.type });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file], title: name });
+            } catch (_) { /* user cancelled */ }
+        } else {
+            alert('শেয়ারিং সাপোর্ট করে না এই ব্রাউজার।');
+        }
+    }
+
+    // ─── theme / font / line nums ───
+    function applyTheme() {
+        const t = themeSelect.value;
+        localStorage.setItem('editor_theme', t);
+        codeInput.classList.remove('theme-default', 'theme-dracula', 'theme-onedark');
+        codeInput.classList.add(`theme-${t}`);
+    }
+
+    function applyFontSize() {
+        const s = fontSizeInput.value;
+        fontSizeVal.innerText = s + 'px';
+        codeInput.style.fontSize = s + 'px';
+        lineNumbers.style.fontSize = s + 'px';
+        localStorage.setItem('editor_font_size', s);
+    }
+
+    function toggleLineNumbers() {
+        const active = lineNumToggle.classList.toggle('active');
+        lineNumbers.style.display = active ? 'block' : 'none';
+        localStorage.setItem('line_numbers_visible', active);
+    }
+
+    // ─── reset ───
+    function resetSettings() {
+        if (confirm('সব সেটিংস ডিফল্ট করতে চান?')) {
+            themeSelect.value = 'default';
+            fontSizeInput.value = '14';
+            if (!lineNumToggle.classList.contains('active')) toggleLineNumbers();
+            localStorage.removeItem('prof_name');
+            localStorage.removeItem('prof_phone');
+            localStorage.removeItem('prof_img');
+            compressedImageBase64 = "";
+            document.getElementById('upload-status-text').innerText = "📁  ছবি আপলোড";
+            applyTheme();
+            applyFontSize();
+            loadProfileData();
+        }
+    }
+
+    // ─── misc ───
+    function capitalizeFirstLetter(input) {
+        let v = input.value;
+        if (v.length > 0) input.value = v.charAt(0).toUpperCase() + v.slice(1);
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+        if (codeInput.value.trim().length > 0) { e.preventDefault();
+            e.returnValue = 'কোড মুছে যেতে পারে!'; }
+    });
+
+    codeInput.addEventListener('keydown', function(e) {
+        const start = this.selectionStart,
+            end = this.selectionEnd;
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 4;
+            onCodeInput();
+        }
+    });
+
+    function onCodeInput() { localStorage.setItem('autosaved_code', codeInput.value);
+        updateCount();
+        debouncedUpdatePreview(); }
+
+    function updateCount() {
+        const text = codeInput.value;
+        const lines = text.length > 0 ? text.split('\n').length : 1;
+        const chars = text.length;
+        charLineCount.innerText = `লাইন ${lines} · ${chars} অক্ষর`;
+
+        let html = '';
+        for (let i = 1; i <= lines; i++) html += `<div>${i}</div>`;
+        lineNumbers.innerHTML = html;
+        syncScroll();
+    }
+
+    function syncScroll() { lineNumbers.scrollTop = codeInput.scrollTop; }
+
+    // ─── format ───
+    function formatCode() {
+        const code = codeInput.value.trim();
+        if (!code) return;
+        const ext = extSelect.value;
+        try {
+            if (ext === 'json') { codeInput.value = JSON.stringify(JSON.parse(code), null, 4); } else if (ext === 'html') {
+                let formatted = '',
+                    pad = 0;
+                let html = code.replace(/(>)(<)(\/*)/g, '$1\r\n$2$3');
+                html.split('\r\n').forEach(node => {
+                    let indent = 0;
+                    if (node.match(/.+<\/\w[^>]*>$/)) indent = 0;
+                    else if (node.match(/^<\/\w/)) { if (pad !== 0) pad--; } else if (node.match(/^<\w([^>]*[^\/])?>.*$/))
+                        indent = 1;
+                    formatted += '    '.repeat(pad) + node + '\r\n';
+                    pad += indent;
+                });
+                codeInput.value = formatted.trim();
+            } else { codeInput.value = code.split('\n').map(l => l.trimEnd()).join('\n'); }
+            onCodeInput();
+        } catch (_) { alert('ফরম্যাট করা সম্ভব হয়নি'); }
+    }
+
+    // ─── copy ───
+    function copyCode() {
+        const text = codeInput.value;
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('[title="কপি"]');
+            const orig = btn.innerHTML;
+            btn.innerHTML =
+                `<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`;
+            setTimeout(() => btn.innerHTML = orig, 1000);
+        }).catch(() => {});
+    }
+
+    // ─── preview ───
+    function debouncedUpdatePreview() { clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(updatePreview, 200); }
+
+    function updatePreview() {
+        if (!isPreviewOpen) return;
+        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        const scrollTop = doc.documentElement ? doc.documentElement.scrollTop : 0;
+        doc.open();
+        doc.write(extSelect.value === 'html' ? codeInput.value :
+            `<pre style="color:#0f172a;font-family:monospace;padding:18px;white-space:pre-wrap;word-break:break-all;font-size:14px;line-height:1.6;">${escapeHtml(codeInput.value)}</pre>`
+            );
+        doc.close();
+        if (doc.documentElement) doc.documentElement.scrollTop = scrollTop;
+    }
+
+    function escapeHtml(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+    function togglePreview() {
+        isPreviewOpen = !isPreviewOpen;
+        if (isPreviewOpen) {
+            workspaceGrid.classList.remove('grid-cols-1');
+            workspaceGrid.classList.add('lg:grid-cols-2');
+            previewContainer.classList.remove('hidden');
+            previewToggleBtn.classList.add('active');
+            updatePreview();
+        } else {
+            workspaceGrid.classList.remove('lg:grid-cols-2');
+            workspaceGrid.classList.add('grid-cols-1');
+            previewContainer.classList.add('hidden');
+            previewToggleBtn.classList.remove('active');
+        }
+        codeInput.focus();
+    }
+
+    // ─── download ───
+    async function saveAsFile() {
+        const content = codeInput.value;
+        if (!content) return;
+        let name = filenameInput.value.trim().replace(/[\\/:*?"<>|]/g, "").replace(/\.+$/, "") || 'Index';
+        const ext = extSelect.value;
+        localStorage.setItem('last_used_extension', ext);
+        if (!name.endsWith('.' + ext)) name = name.split('.')[0] + '.' + ext;
+
+        if ('showSaveFilePicker' in window) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: name,
+                    types: [{ description: ext.toUpperCase() + ' File', accept: { 'text/plain': ['.' + ext] } }]
+                });
+                const w = await handle.createWritable();
+                await w.write(content);
+                await w.close();
+            } catch (_) {}
+        } else {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
+            a.download = name;
+            a.click();
+        }
+    }
+</script>
+
+</body>
+</html>
